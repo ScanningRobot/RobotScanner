@@ -1,3 +1,4 @@
+from __future__ import division
 import requests
 import json
 import random
@@ -35,13 +36,27 @@ while 1:
 
   # Read color from sensor
   data = bus.read_i2c_block_data(0x29, 0)
-  clear = clear = data[1] << 8 | data[0]
-  red = data[3] << 8 | data[2]
-  green = data[5] << 8 | data[4]
-  blue = data[7] << 8 | data[6]
+  clear = data[1] << 8 | data[0]
+  if clear == 0:
+    print 'clear == 0'
+    red = green = blue = 0
+  else:
+    print 'clear != 0'
+    red = data[3] << 8 | data[2]
+    green = data[5] << 8 | data[4]
+    blue = data[7] << 8 | data[6]
   crgb = "C: %s, R: %s, G: %s, B: %s\n" % (clear, red, green, blue)
+  red = int((red / clear) * 256)
+  blue = int((blue / clear) * 256)
+  green = int((green / clear) * 256)
+  print red, green, blue
   print 'Color:'
-  print crgb
+
+  color = hex((red<<16) + (green<<8) + (blue))[2:]
+
+  if len(color) < 6:
+    color = "0" + color
+  color = "#" + color 
 
   # Send server color
   url = ip + ':8081/colorData'
